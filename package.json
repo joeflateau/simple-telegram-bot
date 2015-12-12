@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/joeflateau/simple-telegram-bot/issues"
   },
-  "homepage": "https://github.com/joeflateau/simple-telegram-bot"
+  "homepage": "https://github.com/joeflateau/simple-telegram-bot",
+  "dependencies": {
+    "bluebird": "^3.0.6"
+  }
 }
