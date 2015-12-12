@@ -1,0 +1,22 @@
+{
+  "name": "simple-telegram-bot",
+  "version": "1.0.0",
+  "description": "Manage chats/users in postgres, simple event driven api",
+  "main": "simple-telegram-bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joeflateau/simple-telegram-bot"
+  },
+  "keywords": [
+    "telegram"
+  ],
+  "author": "Joe Flateau",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joeflateau/simple-telegram-bot/issues"
+  },
+  "homepage": "https://github.com/joeflateau/simple-telegram-bot"
+}
