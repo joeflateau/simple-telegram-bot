@@ -110,7 +110,7 @@ SimpleBot.prototype.listAllChatIds = function() {
 
 SimpleBot.prototype.listAllChats = function() {
     var sb = this;
-    return this.listAllChatIds
+    return this.listAllChatIds()
         .then(function(chatIds){
             return chatIds.map(function(id){ return sb.getOrCreateChatById(id); });
         });
