@@ -64,6 +64,18 @@ Chat.prototype.setting = function(key, value) {
     }
 };
 
+Chat.prototype.prompt = function(question, options){
+    var chat = this;
+
+    return new Promise(function(resolve, reject){
+        chat.send(question, options);
+        chat.removeAllListeners("textreply");
+        chat.once("textreply", function(reply){
+            resolve(reply.text);
+        });
+    });
+};
+
 function SimpleBot(bot, table){
     var sb = this;
 
@@ -128,7 +140,6 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
 
     var newChat = new Chat(chatId, table, this.bot);
     this.chats[chatId] = newChat;
-    this.emit("chatstarted", newChat);
 
     var init = table.findAsync(Number(chatId), {  })
         .then(function(userRow) {
@@ -152,6 +163,10 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
             throw new Error("User not found");
         });
 
+    init.done(function(){
+        this.emit("chatstarted", newChat);
+    }.bind(this));
+
     newChat.on("message", function(message){
         init.done(function(){
             if (message.text.indexOf("/") === 0) {
@@ -160,8 +175,10 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
                     text = match[3];
 
                     newChat.emit("command:" + command, new Command(command, text, message, newChat));
-            } else {
+            } else if (newChat.listenerCount("textreply") > 0) {
                 newChat.emit("textreply", { text: message.text, message: message, chat: newChat });
+            } else {
+                newChat.emit("text", { text: message.text, message: message, chat: newChat });
             }
         });
     });
