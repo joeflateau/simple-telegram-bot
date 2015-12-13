@@ -174,8 +174,8 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
                     command = match[1],
                     text = match[3];
 
-                    newChat.emit("command:" + command, new Command(command, text, message, newChat));
-            } else if (newChat.listenerCount("textreply") > 0) {
+                newChat.emit("command:" + command, new Command(command, text, message, newChat));
+            } else if (EventEmitter.listenerCount(newChat, "textreply") > 0) {
                 newChat.emit("textreply", { text: message.text, message: message, chat: newChat });
             } else {
                 newChat.emit("text", { text: message.text, message: message, chat: newChat });
