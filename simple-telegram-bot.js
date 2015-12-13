@@ -147,10 +147,10 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
                 var user = userRow.user;
                 console.log("Chat started with " + user.first_name + " " + user.last_name);
                 newChat.user = user;
-                newChat.settings = userRow.settings;
+                newChat.settings = userRow.settings || {};
                 return userRow;
             } else {
-                return table.insertAsync({ id: chat.id, user: e.message.from })
+                return table.insertAsync({ id: chat.id, user: e.message.from, settings: {} })
                     .then(function(inserted) {
                         if (inserted) {
                             console.log(inserted);
