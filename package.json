@@ -1,6 +1,6 @@
 {
   "name": "simple-telegram-bot",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Manage chats/users in postgres, simple event driven api",
   "main": "simple-telegram-bot.js",
   "scripts": {
