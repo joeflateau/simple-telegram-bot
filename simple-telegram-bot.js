@@ -135,8 +135,19 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
             if (userRow) {
                 var user = userRow.user;
                 console.log("Chat started with " + user.first_name + " " + user.last_name);
+                newChat.user = user;
                 newChat.settings = userRow.settings;
                 return userRow;
+            } else {
+                return table.insertAsync({ id: chat.id, user: e.message.from })
+                    .then(function(inserted) {
+                        if (inserted) {
+                            console.log(inserted);
+                            newChat.user = e.message.from;
+                            newChat.settings = {};
+                            newChat.emit("newuser");
+                        }
+                    });
             }
             throw new Error("User not found");
         });
