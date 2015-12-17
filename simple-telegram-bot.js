@@ -37,6 +37,9 @@ function Chat(chatId, table, bot) {
 util.inherits(Chat, EventEmitter);
 
 Chat.prototype.send = function(text, options) {
+    if (text.length > 4096) {
+        text = text.substring(0, 4093) + "...";
+    }
     this.bot.sendMessage(this.id, text, util._extend({
         parse_mode: "Markdown"
     }, options));
@@ -174,10 +177,17 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
                     command = match[1],
                     text = match[3];
 
-                newChat.emit("command:" + command, new Command(command, text, message, newChat));
+                console.log("command");
+                if (EventEmitter.listenerCount(newChat, "command:" + command) > 0) {
+                    newChat.emit("command:" + command, new Command(command, text, message, newChat));
+                } else {
+                    console.error("Unkown command: " + command);
+                }
             } else if (EventEmitter.listenerCount(newChat, "textreply") > 0) {
+                console.log("textreply");
                 newChat.emit("textreply", { text: message.text, message: message, chat: newChat });
             } else {
+                console.log("text");
                 newChat.emit("text", { text: message.text, message: message, chat: newChat });
             }
         });
