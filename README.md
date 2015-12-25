@@ -3,7 +3,7 @@
 var config = require("./example-config.json");
 
 var token = config.botToken,
-	connectionString = config.connectionString;
+    connectionString = config.connectionString;
 
 var Bot = require("node-telegram-bot-api"),
     bot = new Bot(token, { polling: true }),
@@ -14,16 +14,16 @@ var Bot = require("node-telegram-bot-api"),
 
 simpleBot.on("chatstarted", function(chat){
 
-	chat.send("Say something!");
+    chat.send("Say something!");
 
-	chat.on("command:echo", function(message){
-		chat.send(message.text);
-	});
+    chat.on("command:echo", function(message){
+        chat.send(message.text);
+    });
 
-	chat.on("command:broadcast", function(message){
-		simpleBot.broadcast(message.text);
-	});
-	
+    chat.on("command:broadcast", function(message){
+        simpleBot.broadcast(message.text);
+    });
+    
 });
 ```
 
