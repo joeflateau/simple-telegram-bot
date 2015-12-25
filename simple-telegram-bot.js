@@ -26,11 +26,10 @@ Command.prototype.prompt = function(question, options){
     });
 };
 
-function Chat(chatId, table, bot) {
+function Chat(chatId, bot) {
     EventEmitter.call(this);
     
     this.id = chatId;
-    this.table = table;
     this.bot = bot;
 }
 
@@ -40,23 +39,24 @@ Chat.prototype.send = function(text, options) {
     if (text.length > 4096) {
         text = text.substring(0, 4093) + "...";
     }
-    this.bot.sendMessage(this.id, text, util._extend({
+    this.bot.bot.sendMessage(this.id, text, util._extend({
         parse_mode: "Markdown"
     }, options));
     return this;
 };
 Chat.prototype.sendAction = function(action) {
-    bot.sendChatAction(this.id, action);
+    this.bot.bot.sendChatAction(this.id, action);
     return this;
 };
 Chat.prototype.setting = function(key, value) {
     var chat = this;
     var chatId = chat.id;
-    var table = this.table;
+    var table = this.bot.table;
+    var appName = this.bot.appName;
     if (arguments.length === 2) {
         var settings = this.settings || {};
         settings[key] = value;
-        return table.updateAsync({ id: chatId, settings: settings })
+        return table.updateAsync({ id: chatId, app_name: appName, settings: settings })
             .then(function(){
                 return value;
             });
@@ -79,7 +79,7 @@ Chat.prototype.prompt = function(question, options){
     });
 };
 
-function SimpleBot(bot, table){
+function SimpleBot(bot, table, appName){
     var sb = this;
 
     EventEmitter.call(this);
@@ -90,11 +90,13 @@ function SimpleBot(bot, table){
 
     this.table = table;
 
+    this.appName = appName;
+
     Promise.promisifyAll(table);
 
     this.bot.on("message", function(message){
         try {
-            var chat = sb.getOrCreateChatById(message.chat.id);
+            var chat = sb.getOrCreateChatById(message.chat.id, message.from);
             chat.emit("message", message);
         } catch (err) {
             console.error(err);
@@ -117,7 +119,7 @@ SimpleBot.prototype.broadcast = function(text) {
 };
 
 SimpleBot.prototype.listAllChatIds = function() {
-    return this.table.findAsync({}, { columns: ["id"] })
+    return this.table.findAsync({ app_name: this.appName }, { columns: ["id"] })
         .then(function(users){
             return users.map(function(user){ return user.id; });
         });
@@ -131,8 +133,9 @@ SimpleBot.prototype.listAllChats = function() {
         });
 };
 
-SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
+SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId, from) {
     var table = this.table;
+    var appName = this.appName;
 
     if (this.chats[chatId]) {
         console.log("Continuing chat " + chatId);
@@ -141,23 +144,25 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
 
     console.log("Creating chat " + chatId);
 
-    var newChat = new Chat(chatId, table, this.bot);
+    var newChat = new Chat(chatId, this);
     this.chats[chatId] = newChat;
 
-    var init = table.findAsync(Number(chatId), {  })
-        .then(function(userRow) {
-            if (userRow) {
+    var init = table.findAsync({ id: chatId, app_name: appName }, {  })
+        .then(function(rows) {
+            if (rows.length > 0) {
+                var userRow = rows[0];
                 var user = userRow.user;
                 console.log("Chat started with " + user.first_name + " " + user.last_name);
                 newChat.user = user;
                 newChat.settings = userRow.settings || {};
-                return userRow;
+                return rows;
             } else {
-                return table.insertAsync({ id: chat.id, user: e.message.from, settings: {} })
+                if (!from) throw new Error("New user but no from information");
+                return table.insertAsync({ id: newChat.id, app_name: appName, user: from, settings: {} })
                     .then(function(inserted) {
                         if (inserted) {
                             console.log(inserted);
-                            newChat.user = e.message.from;
+                            newChat.user = from;
                             newChat.settings = {};
                             newChat.emit("newuser");
                         }
@@ -192,6 +197,16 @@ SimpleBot.prototype.getOrCreateChatById = function getOrCreateChatById(chatId) {
             }
         });
     });
+
+    newChat.on("command:set", function(message){
+        return message.prompt("Which setting?")
+            .then(function(key){
+                return newChat.prompt("New value?")
+                    .then(function(value){
+                        return newChat.setting(key, value);
+                    })
+            })
+    })
 
     return newChat;
 }
